@@ -95,8 +95,7 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
 
         data = data.iloc[1:, :]
 
-        TOOLS = "pan,wheel_zoom,box_zoom,box_select,crosshair,resize,reset"  # ,hover"
-        # TOOLS = "pan,wheel_zoom,box_zoom,reset,resize"
+        TOOLS = "pan,wheel_zoom,box_zoom,crosshair,resize,reset"  # ,hover,box_select"
 
         title = "History (total result: {} €)".format(result)
         cols = ["Paid-in", "Balance", "Normalised"]
