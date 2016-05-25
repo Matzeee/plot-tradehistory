@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 def evaluate(intial_balance=0, normalise=100, open_browser=False):
 
     import pandas as pd
