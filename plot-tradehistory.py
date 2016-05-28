@@ -2,12 +2,29 @@
 
 
 def evaluate(intial_balance=0, normalise=100, open_browser=False):
+    """
+    Unofficial: Evaluates and plots tradehistory[…].csv from Ayondo® TradeHub®
+
+    Parameters
+    ----------
+
+    intial_balance:
+        Balace before first "Bank Wire".
+        Useful if export does not start from the outset.
+
+    normalise:
+        Trend for one deposit of chosen amount at the outset.
+
+    open_browser:
+        Open "chart.html" in browser or just save it.
+    """
 
     import pandas as pd
     result = 0
 
     def find_latest():
         import glob
+        from datetime import date
 
         names = ["transactionhistory_????????_to_????????.csv",
                  "transaktionshistorie_????????_bis_????????.csv",
@@ -18,35 +35,26 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
         for name in names:
             dir_list += glob.glob(name)
 
-        i = 0
-        newest = [0, 0, i]
-        newest = {
-            "day": 0,
-            "month": 0,
-            "year": 0,
-            "pos": i
-            }
+        latest = {"date": date(1, 1, 1)}
 
         for item in dir_list:
-            year = int(item[-8:-4])
-            month = int(item[-10:-8])
-            day = int(item[-12:-10])
+            try:
+                year = int(item[-8:-4])
+                month = int(item[-10:-8])
+                day = int(item[-12:-10])
 
-            if (year >= newest["year"]):
-                if (month >= newest["month"]):
-                    if (day > newest["day"]):
-                        newest = {
-                            "day": day,
-                            "month": month,
-                            "year": year,
-                            "pos": i
-                            }
-            i += 1
+                itemdate = date(year, month, day)
+
+                if itemdate >= latest["date"]:
+                    latest["date"] = itemdate
+                    latest["filename"] = item
+            except:
+                pass
 
         try:
-            newest = dir_list[newest["pos"]]
-            print("Newest csv:", newest)
-            return(newest)
+            if __name__ == "__main__":
+                print("Newest csv:", latest["filename"])
+            return(latest["filename"])
         except:
             import sys
             sys.exit("Could not find a matching csv!")
@@ -56,12 +64,15 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
         colnames = ["ID", "Time", "Product", "Type", "Amount", "Balance"]
 
         with open(csvfile, 'r') as f:
-            return pd.read_csv(f, sep=",", decimal=".", index_col=False, skipinitialspace=True, verbose=False, parse_dates=[1], dayfirst=True, names=colnames, skiprows=1)
+            return pd.read_csv(f, sep=",", decimal=".",
+                               index_col=False, skiprows=1,
+                               parse_dates=[1], dayfirst=True, names=colnames)
 
     def evaluate(paid_in=intial_balance, normalised=normalise):
         nonlocal data
 
-        data.sort_values(by="Time", inplace=True)  # , kind="quicksort") # is already almost sorted
+        data.sort_values(by="Time", inplace=True, kind="mergesort")
+        # is almost perfectly sorted
 
         line = pd.DataFrame({"Normalised": normalised, "Paid-in": paid_in}, index=[0])
         data = pd.concat([line, data])
@@ -105,8 +116,7 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
                                 y=cols,
                                 title=title, tools=TOOLS,
                                 ylabel='Euro', legend=True,
-                                width=1250, height=550
-                                )
+                                width=1250, height=550)
 
         if open_browser:
             bch.show(bch.vplot(tsline))
