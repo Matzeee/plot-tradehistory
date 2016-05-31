@@ -108,7 +108,7 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
 
         TOOLS = "pan,wheel_zoom,box_zoom,crosshair,resize,reset"  # ,hover,box_select"
 
-        title = "History (total result: {} €)".format(result)
+        title = "History (total result: {0:.2f} €)".format(result)
         cols = ["Paid-in", "Balance", "Normalised"]
 
         tsline = bch.TimeSeries(data,
@@ -134,7 +134,7 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
     evaluate()
 
     if __name__ == "__main__":
-        print("Result:", result)
+        print("Total result: {0:.2f} €".format(result))
 
     export()
 
