@@ -134,7 +134,10 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
     evaluate()
 
     if __name__ == "__main__":
-        print("Total result: {0:.2f} €".format(result))
+        try:
+            print("Total result: {0:.2f} €".format(result))
+        except UnicodeEncodeError:
+            print("Total result: {0:.2f} EUR".format(result))
 
     export()
 
