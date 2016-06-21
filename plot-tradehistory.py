@@ -4,7 +4,7 @@
 def evaluate(initial_balance=0, initial_bonus=0,
              bonus_real=0, normalise=100, open_browser=False):
     """
-    Unofficial: Evaluates and plots tradehistory[…].csv from Ayondo® TradeHub®
+    Unofficial: Evaluates and plots transactionhistory[…].csv from Ayondo® TradeHub®
 
     Parameters
     ----------
