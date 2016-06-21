@@ -1,5 +1,5 @@
 # plot-tradehistory
-Unofficial: Evaluate and plot tradehistory[…].csv from Ayondo® TradeHub® 
+Unofficial: Evaluate and plot transactionhistory[…].csv from Ayondo® TradeHub® 
 
 ##Requires
 - Python3
