@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-def evaluate(intial_balance=0, normalise=100, open_browser=False):
+def evaluate(initial_balance=0, initial_bonus=0,
+             bonus_real=0, normalise=100, open_browser=False):
     """
     Unofficial: Evaluates and plots tradehistory[…].csv from Ayondo® TradeHub®
 
@@ -9,8 +10,16 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
     ----------
 
     intial_balance:
-        Balace before first "Bank Wire".
+        Balace before first "Bank Wire" in given history.
         Useful if export does not start from the outset.
+
+    initial_bonus:
+        Bonus before first "Bonus" in given history.
+        Useful if export does not start from the outset.
+
+    bonus_real:
+        Bonus that will not be removed if money is paid out;
+        enough spread has been generated.
 
     normalise:
         Trend for one deposit of chosen amount at the outset.
@@ -21,6 +30,14 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
 
     import pandas as pd
     result = 0
+
+    diff = bonus_real - initial_bonus
+    if diff > 0:
+        bonus_real = diff
+        bonus = 0
+    else:
+        bonus = - diff
+        bonus_real = 0
 
     def find_latest():
         import glob
@@ -68,34 +85,46 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
                                index_col=False, skiprows=1,
                                parse_dates=[1], dayfirst=True, names=colnames)
 
-    def evaluate(paid_in=intial_balance, normalised=normalise):
-        nonlocal data
+    def evaluate(paid_in=initial_balance, normalised=normalise):
+        nonlocal data, result, bonus, bonus_real
 
         data.sort_values(by="Time", inplace=True, kind="mergesort")
         # is almost perfectly sorted
 
-        line = pd.DataFrame({"Normalised": normalised, "Paid-in": paid_in}, index=[0])
+        line = pd.DataFrame(
+                {"Normalised": normalised, "Paid-in": paid_in}, index=[0])
+
         data = pd.concat([line, data])
         data.reset_index(drop=True, inplace=True)
 
         for row, col in data.iterrows():
             if (row > 0):
-                Amount = data.at[row, "Amount"]
-                Balance = data.at[row, "Balance"]
+                amount = data.at[row, "Amount"]
+                balance = data.at[row, "Balance"]
 
                 if data.at[row, "Type"] == "Bank Wire":
-                    data.at[row, "Normalised"] = data.at[row-1, "Normalised"]
-                    paid_in += Amount
-                    data.at[row, "Paid-in"] = paid_in
+                    paid_in += amount
+
+                elif data.at[row, "Type"] == "Bonus":
+                    diff = bonus_real - amount
+                    if diff > 0:
+                        bonus = 0
+                        bonus_real = diff
+                    else:
+                        bonus -= diff
+                        bonus_real = 0
 
                 else:
-                    data.at[row, "Normalised"] = data.at[row-1, "Normalised"] * (1+Amount/(Balance-Amount))
-                    data.at[row, "Paid-in"] = paid_in
+                    normalised = normalised * (1+amount/(balance-amount))
+
+                data.at[row, "Paid-in"] = paid_in
+                data.at[row, "Normalised"] = normalised
+                data.at[row, "Total Result"] = balance - paid_in - bonus
+                data.at[row, "Total Result incl Bonus"] = balance - paid_in
 
         balance = data.columns.get_loc("Balance")
         paid_in = data.columns.get_loc("Paid-in")
-        nonlocal result
-        result = data.iat[-1, balance] - data.iat[-1, paid_in]
+        result = data.iat[-1, balance] - data.iat[-1, paid_in] - bonus
 
     def export():
         nonlocal data
@@ -106,10 +135,16 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
 
         data = data.iloc[1:, :]
 
-        TOOLS = "pan,wheel_zoom,box_zoom,crosshair,resize,reset"  # ,hover,box_select"
+        TOOLS = "pan,wheel_zoom,box_zoom,crosshair,resize,reset"  # ,hover"
 
         title = "History (total result: {0:.2f} €)".format(result)
-        cols = ["Paid-in", "Balance", "Normalised"]
+        if bonus > 0:
+            title = title[:-1] + ", excluding Bonus: {0:.2f} €)".format(bonus)
+
+        cols = ["Paid-in", "Balance", "Normalised", "Total Result"]
+        if bonus > 0:
+            cols = ["Paid-in", "Balance", "Normalised",
+                    "Total Result incl Bonus", "Total Result"]
 
         tsline = bch.TimeSeries(data,
                                 x="Time",
@@ -127,19 +162,23 @@ def evaluate(intial_balance=0, normalise=100, open_browser=False):
         import matplotlib
         matplotlib.style.use('ggplot')
 
-        data.plot(x="Time", y=["Normalised", "Balance", "Paid-in"])
+        data.plot(x="Time", y=cols)
         plt.savefig("data.pdf")
 
     data = import_Data(find_latest())
     evaluate()
 
     if __name__ == "__main__":
+        toprint = "Total result: {0:.2f} €".format(result)
+        if bonus > 0:
+            toprint += "\nExcluding Bonus: {0:.2f} €".format(bonus)
         try:
-            print("Total result: {0:.2f} €".format(result))
+            print(toprint)
         except UnicodeEncodeError:
-            print("Total result: {0:.2f} EUR".format(result))
+            print(toprint.replace("€", "EUR"))
 
     export()
 
 if __name__ == "__main__":
-    evaluate(intial_balance=0, normalise=100, open_browser=True)
+    evaluate(initial_balance=0, normalise=1000,
+             initial_bonus=0, bonus_real=0, open_browser=False)
