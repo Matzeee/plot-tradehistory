@@ -8,7 +8,7 @@ Unofficial: Evaluate and plot transactionhistory[…].csv from Ayondo® TradeHub
 - Matplotlib
 
 ## Usage
-Download tradehistory[…].csv from TradeHub® with desired timespan (all languages should work).
+Download transactionhistory[…].csv from TradeHub® with desired timespan (all languages should work).
 The script searches for the latest file in its folder and evaluates:
 - Paid-in money
 - Absolute balance
