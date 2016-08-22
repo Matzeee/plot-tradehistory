@@ -130,12 +130,13 @@ def evaluate(initial_balance=0, initial_bonus=0,
         nonlocal data
 
         import bokeh.charts as bch
+        from bokeh.layouts import column
         # from bokeh.models import HoverTool, GlyphRenderer
         bch.output_file("Chart.html")
 
         data = data.iloc[1:, :]
 
-        TOOLS = "pan,wheel_zoom,box_zoom,crosshair,resize,reset"  # ,hover"
+        # TOOLS = "pan, wheel_zoom, box_zoom, crosshair, resize, reset "# , hover"
 
         title = "History (total result: {0:.2f} €)".format(result)
         if bonus > 0:
@@ -149,21 +150,34 @@ def evaluate(initial_balance=0, initial_bonus=0,
         tsline = bch.TimeSeries(data,
                                 x="Time",
                                 y=cols,
-                                title=title, tools=TOOLS,
+                                title=title,  # tools=TOOLS,
                                 ylabel='Euro', legend=True,
                                 width=1250, height=550)
+        """
+        from bokeh.models import HoverTool
+        hover = HoverTool(
+            tooltips=[
+                ("index", "$index"),
+                ("(x,y)", "($x, $y)"),
+                ("desc", "$balance"),
+                # ("test", data.iloc["$index", 4])
+            ]
+        )
+
+        tsline.add_tools(hover)
+        """
 
         if open_browser:
-            bch.show(bch.vplot(tsline))
+            bch.show(column(tsline))
         else:
-            bch.save(bch.vplot(tsline))
+            bch.save(column(tsline))
 
         import matplotlib.pyplot as plt
         import matplotlib
         matplotlib.style.use('ggplot')
 
         data.plot(x="Time", y=cols)
-        plt.savefig("data.pdf")
+        plt.savefig("Chart.pdf")
 
     data = import_Data(find_latest())
     evaluate()
